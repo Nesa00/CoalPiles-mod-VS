@@ -1,0 +1,16 @@
+{
+  "type": "code",
+  "modid": "coalpiles",
+  "name": "Coal Piles",
+  "authors": [
+    "Nesa"
+  ],
+  "description": "Neatly stack charcoal, bituminous coal, lignite, coke, and contaminated coal in deterministic 3D ground piles up to 128 items per block.",
+  "version": "1.0.0",
+  "side": "Universal",
+  "requiredOnClient": true,
+  "requiredOnServer": true,
+  "dependencies": {
+    "game": "1.22.0"
+  }
+}

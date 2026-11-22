@@ -1,0 +1,35 @@
+{
+  "code": "densecoalpile",
+  "class": "BlockDenseCoalPile",
+  "entityClass": "DenseCoalPile",
+  "creativeinventory": {},
+  "drawtype": "Json",
+  "renderpass": "Opaque",
+  "blockmaterial": "Wood",
+  "lightAbsorption": 0,
+  "sidesolid": { "all": false },
+  "sideopaque": { "all": false },
+  "resistance": 2.0,
+  "textures": {
+    "all": { "base": "game:block/coal/charcoal" },
+    "charcoal": { "base": "game:block/coal/charcoal" },
+    "ore-bituminouscoal": { "base": "game:block/coal/bituminous" },
+    "ore-lignite": { "base": "game:block/coal/lignite" },
+    "coke": { "base": "game:block/coal/coke" },
+    "coal-contaminated": { "base": "game:block/coal/contaminated" }
+  },
+  "sounds": {
+    "place": "game:block/gravel",
+    "break": "game:block/gravel",
+    "hit": "game:block/gravel"
+  },
+  "collisionSelectionBox": {
+    "x1": 0,
+    "y1": 0,
+    "z1": 0,
+    "x2": 1,
+    "y2": 0.12,
+    "z2": 1
+  },
+  "drops": []
+}
