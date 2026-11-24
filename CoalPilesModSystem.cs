@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -230,6 +231,72 @@ namespace CoalPiles
         public override Cuboidf[] GetCollisionBoxes(IBlockAccessor blockAccessor, BlockPos pos) => GetPileBoxes(blockAccessor, pos);
         public override Cuboidf[] GetSelectionBoxes(IBlockAccessor blockAccessor, BlockPos pos) => GetPileBoxes(blockAccessor, pos);
 
+        public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos)
+        {
+            base.OnNeighbourBlockChange(world, pos, neibpos);
+
+            if (world.Side != EnumAppSide.Server) return;
+
+            BlockPos belowPos = pos.DownCopy();
+            Block belowBlock = world.BlockAccessor.GetBlock(belowPos);
+            if (belowBlock.CanAttachBlockAt(world.BlockAccessor, this, belowPos, BlockFacing.UP))
+            {
+                return;
+            }
+
+            // Drop straight down to the lowest replaceable block
+            BlockPos targetPos = pos.Copy();
+            while (targetPos.Y > 0)
+            {
+                BlockPos nextDown = targetPos.DownCopy();
+                Block nextBlock = world.BlockAccessor.GetBlock(nextDown);
+                if (nextBlock.IsReplacableBy(this))
+                {
+                    targetPos = nextDown;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (targetPos.Equals(pos)) return;
+
+            var oldBe = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityCoalPile;
+            string itemCode = oldBe?.ItemCode ?? CoalPilesModSystem.DefaultFuelCode;
+            int count = oldBe?.Count ?? 1;
+
+            BlockPos supportPos = targetPos.DownCopy();
+            Block supportBlock = world.BlockAccessor.GetBlock(supportPos);
+
+            // Remove old pile
+            world.BlockAccessor.SetBlock(0, pos);
+
+            if (supportBlock.CanAttachBlockAt(world.BlockAccessor, this, supportPos, BlockFacing.UP))
+            {
+                // Place pile at the new position with its exact fuel type & count
+                world.BlockAccessor.SetBlock(BlockId, targetPos);
+                var newBe = world.BlockAccessor.GetBlockEntity(targetPos) as BlockEntityCoalPile;
+                if (newBe != null)
+                {
+                    newBe.ItemCode = itemCode;
+                    newBe.Count = count;
+                    newBe.MarkDirty(true);
+                }
+
+                world.PlaySoundAt(new AssetLocation("game:block/gravel"), targetPos.X + 0.5, targetPos.Y + 0.5, targetPos.Z + 0.5, null, true, 16f);
+            }
+            else
+            {
+                // Landed on a non-solid block (torch, slab, etc.) -> drop all fuel items
+                Item fuelItem = CoalPilesModSystem.GetFuelItem(world, itemCode);
+                if (fuelItem != null && count > 0)
+                {
+                    world.SpawnItemEntity(new ItemStack(fuelItem, count), targetPos.ToVec3d().Add(0.5, 0.25, 0.5));
+                }
+            }
+        }
+
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (byPlayer == null || blockSel == null) return false;
@@ -276,22 +343,19 @@ namespace CoalPiles
             return false;
         }
 
-        public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
+        public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
         {
-            if (world.Side == EnumAppSide.Server)
+            var be = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityCoalPile;
+            if (be != null && be.Count > 0)
             {
-                var be = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityCoalPile;
-                if (be != null && be.Count > 0)
+                Item fuelItem = CoalPilesModSystem.GetFuelItem(world, be.ItemCode);
+                if (fuelItem != null)
                 {
-                    Item fuelItem = CoalPilesModSystem.GetFuelItem(world, be.ItemCode);
-                    if (fuelItem != null)
-                    {
-                        world.SpawnItemEntity(new ItemStack(fuelItem, be.Count), pos.ToVec3d().Add(0.5, 0.25, 0.5));
-                    }
+                    return new[] { new ItemStack(fuelItem, be.Count) };
                 }
             }
 
-            base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+            return Array.Empty<ItemStack>();
         }
 
         public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
