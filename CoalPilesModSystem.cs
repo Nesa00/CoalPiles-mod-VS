@@ -361,7 +361,7 @@ namespace CoalPiles
 
                 world.PlaySoundAt(new AssetLocation("game:block/gravel"), targetPos.X + 0.5, targetPos.Y + 0.5, targetPos.Z + 0.5, null, true, 16f);
             }
-            else
+            else if (!wasBurning)
             {
                 Item fuelItem = CoalPilesModSystem.GetFuelItem(world, itemCode);
                 if (fuelItem != null && count > 0)
@@ -423,7 +423,7 @@ namespace CoalPiles
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
         {
             var be = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityCoalPile;
-            if (be != null && be.Count > 0)
+            if (be != null && be.Count > 0 && !be.IsBurning)
             {
                 Item fuelItem = CoalPilesModSystem.GetFuelItem(world, be.ItemCode);
                 if (fuelItem != null)
@@ -503,7 +503,7 @@ namespace CoalPiles
                 EnsureBaseMesh(capi, ItemCode, IsBurning);
                 UpdateClientParticleListener();
             }
-            else if (IsBurning)
+            else if (api.Side == EnumAppSide.Server)
             {
                 RegisterServerBurnListener();
             }
@@ -567,7 +567,34 @@ namespace CoalPiles
 
         private void OnServerBurnTick(float dt)
         {
-            if (!IsBurning || Api == null) return;
+            if (Api == null) return;
+
+            // If not burning yet, check if an adjacent vanilla coal pile or fire block is burning
+            if (!IsBurning)
+            {
+                if (Api.World.Rand.NextDouble() < 0.25)
+                {
+                    foreach (BlockFacing face in BlockFacing.ALLFACES)
+                    {
+                        BlockPos neighborPos = Pos.AddCopy(face);
+                        BlockEntity neighborBe = Api.World.BlockAccessor.GetBlockEntity(neighborPos);
+
+                        if (neighborBe is Vintagestory.GameContent.BlockEntityCoalPile vanillaCoalBe && vanillaCoalBe.IsBurning)
+                        {
+                            TryIgnite();
+                            return;
+                        }
+
+                        Block neighborBlock = Api.World.BlockAccessor.GetBlock(neighborPos);
+                        if (neighborBlock?.Code?.Path == "fire")
+                        {
+                            TryIgnite();
+                            return;
+                        }
+                    }
+                }
+                return;
+            }
 
             // Extinguish if submerged in liquid
             Block liquid = Api.World.BlockAccessor.GetBlock(Pos, BlockLayersAccess.Fluid);
@@ -577,15 +604,21 @@ namespace CoalPiles
                 return;
             }
 
-            // Spread fire to adjacent coal piles
+            // Spread fire to adjacent coal piles (both mod piles and vanilla coal piles)
             if (Api.World.Rand.NextDouble() < 0.15)
             {
                 foreach (BlockFacing face in BlockFacing.ALLFACES)
                 {
-                    var neighborBe = Api.World.BlockAccessor.GetBlockEntity(Pos.AddCopy(face)) as BlockEntityCoalPile;
-                    if (neighborBe != null && !neighborBe.IsBurning)
+                    BlockPos neighborPos = Pos.AddCopy(face);
+                    BlockEntity neighborBe = Api.World.BlockAccessor.GetBlockEntity(neighborPos);
+
+                    if (neighborBe is BlockEntityCoalPile modCoalBe && !modCoalBe.IsBurning)
                     {
-                        neighborBe.TryIgnite();
+                        modCoalBe.TryIgnite();
+                    }
+                    else if (neighborBe is Vintagestory.GameContent.BlockEntityCoalPile vanillaCoalBe && !vanillaCoalBe.IsBurning)
+                    {
+                        vanillaCoalBe.TryIgnite();
                     }
                 }
             }
