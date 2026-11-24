@@ -8,7 +8,13 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-if exist "CoalPiles-1.0.0.zip" del "CoalPiles-1.0.0.zip"
-powershell -NoProfile -Command "Compress-Archive -Path 'modinfo.json', modicon.png,'assets','bin\Release\CoalPiles.dll' -DestinationPath 'CoalPiles-1.0.0.zip' -Force"
-copy /Y "CoalPiles-1.0.0.zip" "%AppData%\VintagestoryData\Mods\"
+for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content modinfo.json -Raw | ConvertFrom-Json).version"`) do set "VERSION=%%A"
+
+set "ZIPNAME=CoalPiles-%VERSION%.zip"
+
+if exist "%ZIPNAME%" del "%ZIPNAME%"
+powershell -NoProfile -Command "Compress-Archive -Path 'modinfo.json','modicon.png','assets','bin\Release\CoalPiles.dll' -DestinationPath '%ZIPNAME%' -Force"
+
+del /Q "%AppData%\VintagestoryData\Mods\CoalPiles-*.zip" 2>nul
+copy /Y "%ZIPNAME%" "%AppData%\VintagestoryData\Mods\"
 start "" "D:\Vintagestory\Vintagestory.exe"
