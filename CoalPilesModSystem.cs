@@ -18,6 +18,7 @@ namespace CoalPiles
             "charcoal",
             "ore-bituminouscoal",
             "ore-lignite",
+            "ore-anthracite",
             "coke",
             "coal-contaminated"
         };

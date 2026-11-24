@@ -15,6 +15,7 @@
     "charcoal": { "base": "game:block/coal/charcoal" },
     "ore-bituminouscoal": { "base": "game:block/coal/bituminous" },
     "ore-lignite": { "base": "game:block/coal/lignite" },
+    "ore-anthracite": { "base": "game:block/coal/anthracite" },
     "coke": { "base": "game:block/coal/coke" },
     "coal-contaminated": { "base": "game:block/coal/contaminated" }
   },
