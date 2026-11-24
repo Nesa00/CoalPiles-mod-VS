@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -44,6 +45,12 @@ namespace CoalPiles
                 behaviors.Insert(0, new CoalPilePlaceBehavior(item));
                 item.CollectibleBehaviors = behaviors.ToArray();
             }
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            BlockEntityCoalPile.ClearMeshCache();
         }
 
         public static Item GetFuelItem(IWorldAccessor world, string fuelCode)
@@ -383,6 +390,7 @@ namespace CoalPiles
         public int Count = 1;
 
         private static readonly Vec3f CenterOrigin = new Vec3f(0.5f, 0f, 0.5f);
+        private static readonly ConcurrentDictionary<string, MeshData> BaseMeshCache = new ConcurrentDictionary<string, MeshData>();
 
         // 16 deterministic positions (center -> sides -> corners), staggered so every neighbor is >= 0.25 blocks apart
         private static readonly (float x, float z, float rotDeg)[] PileSlots =
@@ -410,6 +418,20 @@ namespace CoalPiles
             (0.14f, 0.87f,  49f),
         };
 
+        public static void ClearMeshCache()
+        {
+            BaseMeshCache.Clear();
+        }
+
+        public override void Initialize(ICoreAPI api)
+        {
+            base.Initialize(api);
+            if (api is ICoreClientAPI capi)
+            {
+                EnsureBaseMesh(capi, ItemCode);
+            }
+        }
+
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
             base.ToTreeAttributes(tree);
@@ -423,10 +445,42 @@ namespace CoalPiles
             ItemCode = tree.GetString("itemCode", CoalPilesModSystem.DefaultFuelCode);
             Count = tree.GetInt("count", 1);
 
-            if (Api?.Side == EnumAppSide.Client)
+            if (Api is ICoreClientAPI capi)
             {
+                EnsureBaseMesh(capi, ItemCode);
                 Api.World.BlockAccessor.MarkBlockDirty(Pos);
             }
+        }
+
+        private static MeshData EnsureBaseMesh(ICoreClientAPI capi, string itemCode)
+        {
+            if (string.IsNullOrEmpty(itemCode)) return null;
+            if (BaseMeshCache.TryGetValue(itemCode, out MeshData cached)) return cached;
+
+            Item fuelItem = CoalPilesModSystem.GetFuelItem(capi.World, itemCode);
+            if (fuelItem?.Shape?.Base == null) return null;
+
+            AssetLocation shapeLoc = fuelItem.Shape.Base.Clone().WithPathPrefixOnce("shapes/").WithPathAppendixOnce(".json");
+            Shape shape = capi.Assets.TryGet(shapeLoc)?.ToObject<Shape>();
+            if (shape == null) return null;
+
+            // Use the item's own shape + textures, inserted into the block texture atlas
+            var texSource = new ShapeTextureSource(capi, shape, shapeLoc.ToString());
+            if (fuelItem.Textures != null)
+            {
+                foreach (var val in fuelItem.Textures)
+                {
+                    texSource.textures[val.Key] = val.Value;
+                }
+            }
+
+            capi.Tesselator.TesselateShape("coalpile-" + itemCode, shape, out MeshData baseMesh, texSource);
+            if (baseMesh != null)
+            {
+                BaseMeshCache[itemCode] = baseMesh;
+            }
+
+            return baseMesh;
         }
 
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
@@ -434,16 +488,19 @@ namespace CoalPiles
             ICoreClientAPI capi = Api as ICoreClientAPI;
             if (capi == null) return true;
 
-            Item fuelItem = CoalPilesModSystem.GetFuelItem(Api.World, ItemCode);
-            if (fuelItem?.Shape?.Base == null) return true;
-
-            AssetLocation shapeLoc = fuelItem.Shape.Base.Clone().WithPathPrefixOnce("shapes/").WithPathAppendixOnce(".json");
-            Shape shape = Api.Assets.TryGet(shapeLoc)?.ToObject<Shape>();
-            if (shape == null) return true;
-
-            ITexPositionSource texSource = new CoalTexSource(capi.Tesselator.GetTextureSource(Block), ItemCode);
-            tessThreadTesselator.TesselateShape(Block.Code.Path, shape, out MeshData baseMesh, texSource);
-            if (baseMesh == null) return true;
+            if (!BaseMeshCache.TryGetValue(ItemCode, out MeshData baseMesh))
+            {
+                string code = ItemCode;
+                BlockPos pos = Pos.Copy();
+                capi.Event.EnqueueMainThreadTask(() =>
+                {
+                    if (EnsureBaseMesh(capi, code) != null)
+                    {
+                        capi.World.BlockAccessor.MarkBlockDirty(pos);
+                    }
+                }, "coalpiles-genmesh");
+                return true;
+            }
 
             int renderCount = GameMath.Clamp(Count, 0, MaxCount);
             for (int i = 0; i < renderCount; i++)
@@ -468,19 +525,5 @@ namespace CoalPiles
 
             return true;
         }
-    }
-
-    public class CoalTexSource : ITexPositionSource
-    {
-        private readonly TextureAtlasPosition texPos;
-        public Size2i AtlasSize { get; }
-
-        public CoalTexSource(ITexPositionSource blockTexSource, string textureKey)
-        {
-            AtlasSize = blockTexSource.AtlasSize;
-            texPos = blockTexSource[textureKey] ?? blockTexSource["up"];
-        }
-
-        public TextureAtlasPosition this[string textureCode] => texPos;
     }
 }

@@ -1,42 +1,36 @@
 # Coal Piles
 
-A lightweight Vintage Story mod that lets you neatly stack solid fuels in dense, deterministic 3D ground piles—holding up to **128 items per block** without conflicting with vanilla coal pile mechanics.
+A lightweight Vintage Story mod that lets you neatly stack solid fuels in dense 3D ground piles—holding up to **128 items per block** without conflicting with vanilla coal pile mechanics.
 
-![Coal Piles Demo](demo.webp)
+![Coal Piles Demo](media/video/demo.webp)
+![Coal Piles Demo](media/video/demo1.webp)
+![Coal Piles Demo](media/video/demo2.webp)
 
 ## Features
-* **High-Capacity Storage:** Store up to **128 items** per block (8 layers of 16 chunks).
-* **Fast Hold-to-Fill Stacking:** Hold down the interaction keys to rapidly stream items into a pile—fill a full 128-item pile in just over a second.
-* **Vanilla-Friendly Controls:** Uses `Ctrl` to start and add to piles, keeping vanilla `Shift + Right-Click` coal piles completely intact.
-* **5 Supported Fuels:**
-  * Charcoal
-  * Bituminous Coal (Black Coal)
-  * Lignite (Brown Coal)
-  * Coke
-  * Contaminated Coal (1.22+)
-* **Original 3D Models:** Uses the game's original 3D item models (scaled to `0.9x`) with their native textures, placed deterministically from the center outward with zero clipping and 90° per-layer rotation.
-* **Dynamic Hitboxes:** Collision and selection boxes grow smoothly as each new layer is added.
+- **High Capacity:** Store up to **128 items** per block (8 layers of 16 chunks) with scaling hitboxes.
+- **6 Supported Fuels:** Charcoal, Bituminous Coal, Lignite, Anthracite, Coke, and Contaminated Coal (1.22+).
+- **Fast Hold-to-Fill:** Hold the interaction keys to rapidly stream items into a pile.
+- **Native 3D Visuals:** Uses each fuel's original 3D item model and textures, arranged cleanly from the center outward.
+- **Gravity Support:** Piles drop down when the block underneath is removed (preserving fuel type and count).
+- **Vanilla-Safe Controls:** Uses `Ctrl` so vanilla `Shift + Right-Click` coal piles stay intact.
 
 ## Controls
 
-| Action | Input | Speed / Behavior |
+| Action | Input | Behavior |
 | :--- | :--- | :--- |
-| **Start a new pile** | `Ctrl + Right-Click` on solid ground | Places 1 item |
-| **Add items (Single)** | `Ctrl + Right-Click` on matching pile | Tap for **1 item**, or **hold** to add continuously (~12 items/sec) |
-| **Add items (Bulk)** | `Ctrl + Shift + Right-Click` on matching pile | Tap for **16 items** (1 layer), or **hold** to add 16 items every 0.15s |
-| **Take 1 item** | `Right-Click` on pile | Removes 1 item |
-| **Take 16 items** | `Shift + Right-Click` on pile | Removes 16 items (1 full layer) |
+| **Start a pile** | `Ctrl + Right-Click` on ground | Places 1 item |
+| **Add (Single)** | `Ctrl + Right-Click` on pile | Tap for **1**, or **hold** (~12/sec) |
+| **Add (Bulk)** | `Ctrl + Shift + Right-Click` on pile | Tap for **16**, or **hold** (16 / 0.15s) |
+| **Take** | `Right-Click` / `Shift + Right-Click` | Removes **1** or **16** items |
 
-> **Note:** Bulk placement (`Ctrl + Shift + Right-Click`) and hold-to-fill only work on an **existing pile**. You must place at least **1 item** on the ground first with `Ctrl + Right-Click` so it does not conflict with vanilla's coal stacking mechanic.
-
-*Breaking a pile drops all stored fuel items.*
+> Place at least **1 item** with `Ctrl + Right-Click` before using bulk placement or hold-to-fill. Breaking a pile drops all stored fuel.
 
 ## Known Issues
-* Aiming at the **side** of an existing pile and pressing `Ctrl + Shift + Right-Click` may occasionally trigger the standard vanilla coal placement mechanic instead of adding to the pile. Aim at the **top** of the pile for reliable bulk stacking.
+- Aiming at the **side** of a pile while pressing `Ctrl + Shift + Right-Click` may trigger vanilla coal placement. Aim at the **top** of the pile for reliable bulk stacking.
 
 ## Installation
-1. Download the mod `.zip` file.
-2. Place it into your Vintage Story `Mods` folder (usually `%appdata%\VintagestoryData\Mods`).
-3. Launch the game and enable **Coal Piles** in the Mod Manager.
+Drop the `.zip` file into your Vintage Story `Mods` folder and enable **Coal Piles** in the Mod Manager.
 
-> **Warning:** If you disable or remove this mod from a world where it has already been used, you will **not be able to access** any items stored inside existing piles. Make sure to empty or break all your piles before disabling the mod.
+> **Warning:** 
+Empty or break all piles before removing this mod, or stored items will become inaccessible.
+**Tested on Windows only.**

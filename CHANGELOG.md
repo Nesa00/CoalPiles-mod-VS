@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0] - 2026-11-24
+
+### Added
+- **Anthracite Support:** Added Anthracite (`ore-anthracite`) as a 6th supported fuel.
+- **Gravity Support:** Piles now fall straight down when the block underneath is removed, preserving fuel type and count (or dropping all items if landing on a non-solid block).
+
+### Fixed
+- **Authentic Item Textures:** Updated pile rendering to use each fuel item's native shape textures and UV mapping, matching the exact appearance of dropped items.
+
 ## [1.0.0] - 2026-11-22
 
 ### Added
