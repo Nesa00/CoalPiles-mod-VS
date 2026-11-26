@@ -5,7 +5,7 @@
   "authors": [
     "Nesa"
   ],
-  "description": "Neatly stack charcoal, bituminous coal, lignite, coke, contaminated coal and anthracite in 3D ground piles up to 128 items.",
+  "description": "Neatly stack charcoal, bituminous coal, lignite, coke, contaminated coal and anthracite in 3D ground piles—up to 160 items per block and infinitely upward.",
   "version": "1.1.0",
   "side": "Universal",
   "requiredOnClient": true,
