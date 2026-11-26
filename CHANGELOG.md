@@ -1,13 +1,17 @@
 # Changelog
 
-## [1.1.0] - 2026-11-24
+## [1.1.0] - 2026-11-26
 
 ### Added
+- **Infinite Vertical Stacking:** Continuing to add fuel to a full pile (`Ctrl + Right-Click` or `Ctrl + Shift + Right-Click`) now automatically starts and fills new piles stacked directly upward.
 - **Anthracite Support:** Added Anthracite (`ore-anthracite`) as a 6th supported fuel.
 - **Gravity Support:** Piles now fall straight down when the block underneath is removed, preserving fuel type and count (or dropping all items if landing on a non-solid block).
 
+### Changed
+- **10-Layer Full-Block Capacity:** Increased maximum pile capacity from 128 items (8 layers) to **160 items (10 layers)** with exact 1.0-block layer spacing and hitboxes so stacked piles sit flush without overlapping or gaps.
+
 ### Fixed
-- **Authentic Item Textures:** Updated pile rendering to use each fuel item's native shape textures and UV mapping, matching the exact appearance of dropped items.
+- **Linux/macOS Archive Compatibility:** Switched `.zip` packaging from PowerShell to 7-Zip (`7z`) so archive directory paths use forward slashes (`/`).
 
 ## [1.0.0] - 2026-11-22
 
