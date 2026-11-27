@@ -15,9 +15,6 @@ for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content 
 set "NAME=%NAME: =-%"
 set "ZIPNAME=%NAME%-%VERSION%.zip"
 
-
-set "ZIPNAME=CoalPiles-%VERSION%.zip"
-
 if exist "%ZIPNAME%" del "%ZIPNAME%"
 
 copy /Y "bin\Release\CoalPiles.dll" "CoalPiles.dll" >nul
